@@ -1,0 +1,55 @@
+name: courtside
+description: "CourtSide — Basketball Stats Tracker. CSE489 Spring 2026, BRAC University."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ─── State management & DI ──────────────────────────────────────
+  flutter_riverpod: ^2.5.1
+
+  # ─── Navigation ─────────────────────────────────────────────────
+  go_router: ^14.2.7
+
+  # ─── Database (SQLite via drift ORM) ────────────────────────────
+  drift: ^2.20.2
+  sqlite3_flutter_libs: ^0.5.24
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # ─── Session persistence ────────────────────────────────────────
+  shared_preferences: ^2.3.2
+
+  # ─── Charts (used in Phase 4 — Stats & Analytics) ───────────────
+  fl_chart: ^0.69.0
+
+  # ─── PDF & share (used in Phase 5 — Export & Share) ─────────────
+  pdf: ^3.11.1
+  printing: ^5.13.3
+  screenshot: ^3.0.0
+  share_plus: ^10.0.2
+
+  # ─── Utilities ──────────────────────────────────────────────────
+  intl: ^0.19.0
+  crypto: ^3.0.5
+
+  # ─── UI icons ───────────────────────────────────────────────────
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+  # ─── Drift code generation ──────────────────────────────────────
+  drift_dev: ^2.20.2
+  build_runner: ^2.4.13
+
+flutter:
+  uses-material-design: true
