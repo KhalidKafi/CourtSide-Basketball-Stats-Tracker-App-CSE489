@@ -119,10 +119,15 @@ class AuthRepository {
     required String password,
   }) async {
     final normalized = email.trim().toLowerCase();
-    final row = await _db.findUserByEmail(normalized);
+    // Use findActiveUserByEmail: disabled accounts return null here,
+    // producing the same "no account" error as a nonexistent email. We
+    // deliberately don't reveal that the account is disabled.
+    final row = await _db.findActiveUserByEmail(normalized);
 
     if (row == null) {
-      return const AuthResult.failure('No account found with this email.');
+      return const AuthResult.failure(
+        'No account found with this email, or the account is inactive.',
+      );
     }
     if (!PasswordHasher.verify(password, row.password)) {
       return const AuthResult.failure('Incorrect password.');
@@ -142,10 +147,10 @@ class AuthRepository {
     if (id == null) return null;
 
     final row = await _db.findUserById(id);
-    if (row == null) {
-      // Stale session — the saved user was deleted (e.g. Super Admin
-      // deleted this admin while they were logged in). Clear the stale
-      // key so we don't keep trying to restore a missing user.
+    // Clear the session if the user is gone OR has been disabled since
+    // last login — an admin disabling a coach should kick them out on
+    // their next app open.
+    if (row == null || row.isDisabled) {
       await prefs.remove(_kSessionUserIdKey);
       return null;
     }
