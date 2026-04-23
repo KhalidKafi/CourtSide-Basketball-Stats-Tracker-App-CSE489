@@ -8,6 +8,8 @@ import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/viewmodels/auth_notifier.dart';
 import '../../features/coach/screens/coach_dashboard_screen.dart';
+import '../../features/coach/screens/team_detail_screen.dart';
+import '../../features/coach/screens/team_list_screen.dart';
 import '../../features/super_admin/screens/super_admin_dashboard_screen.dart';
 import '../utils/user_role.dart';
 
@@ -27,6 +29,11 @@ class AppRoutes {
   static const coachHome = '/coach';
   static const adminHome = '/admin';
   static const superAdminHome = '/super-admin';
+
+  // Coach feature routes (Phase 2a+).
+  static const coachTeams = '/coach/teams';
+  // Path pattern: /coach/teams/:teamId
+  static String coachTeamDetail(int teamId) => '/coach/teams/$teamId';
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -108,6 +115,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.coachHome,
         builder: (_, __) => const CoachDashboardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.coachTeams,
+        builder: (_, __) => const TeamListScreen(),
+      ),
+      GoRoute(
+        path: '/coach/teams/:teamId',
+        builder: (_, state) {
+          final teamId = int.parse(state.pathParameters['teamId']!);
+          return TeamDetailScreen(teamId: teamId);
+        },
       ),
       GoRoute(
         path: AppRoutes.adminHome,
