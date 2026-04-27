@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +10,7 @@ import '../../features/auth/viewmodels/auth_notifier.dart';
 import '../../features/coach/screens/coach_dashboard_screen.dart';
 import '../../features/coach/screens/team_detail_screen.dart';
 import '../../features/coach/screens/game_list_screen.dart';
+import '../../features/coach/screens/new_game_screen.dart';
 import '../../features/coach/screens/team_list_screen.dart';
 import '../../features/super_admin/screens/super_admin_dashboard_screen.dart';
 import '../utils/user_role.dart';
@@ -135,6 +136,46 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final teamId = int.parse(state.pathParameters['teamId']!);
           return GameListScreen(teamId: teamId);
+        },
+      ),
+      GoRoute(
+        path: '/coach/teams/:teamId/games/new',
+        builder: (_, state) {
+          final teamId = int.parse(state.pathParameters['teamId']!);
+          return NewGameScreen(teamId: teamId);
+        },
+      ),
+      GoRoute(
+        path: '/coach/games/:gameId/live',
+        builder: (context, state) {
+          final gameId = int.parse(state.pathParameters['gameId']!);
+          return Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              title: const Text('Live Game (Step 7)'),
+            ),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.construction, size: 64),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Live game ID: $gameId',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Coming in Step 7'),
+                  ],
+                ),
+              ),
+            ),
+          );
         },
       ),
       GoRoute(

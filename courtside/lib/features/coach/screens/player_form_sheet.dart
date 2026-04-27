@@ -203,7 +203,7 @@ class _PlayerFormSheetState extends ConsumerState<PlayerFormSheet> {
 
               // Position dropdown
               DropdownButtonFormField<PlayerPosition>(
-                value: _position,
+                initialValue: _position,
                 decoration: const InputDecoration(
                   labelText: 'Position',
                   prefixIcon: Icon(Icons.sports_basketball_outlined),
