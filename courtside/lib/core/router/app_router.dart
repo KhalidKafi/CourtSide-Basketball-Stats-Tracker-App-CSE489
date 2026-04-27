@@ -153,7 +153,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             appBar: AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.go(AppRoutes.coachHome),
               ),
               title: const Text('Live Game (Step 7)'),
             ),
