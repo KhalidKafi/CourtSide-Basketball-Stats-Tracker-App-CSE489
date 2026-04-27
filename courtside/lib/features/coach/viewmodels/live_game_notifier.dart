@@ -59,19 +59,27 @@ extension PlayerActionTypeX on PlayerActionType {
 // Last-action record — supports single-step undo
 
 
-sealed class LastAction {
-  const LastAction();
-}
+enum LastActionKind { playerStat, opponentScore }
 
-class PlayerStatAction extends LastAction {
-  final int playerId;
-  final PlayerActionType type;
-  const PlayerStatAction({required this.playerId, required this.type});
-}
+/// The most recent reversible action. One class instead of a sealed
+/// hierarchy — simpler and avoids analyzer issues with pattern matching.
+/// Only the fields relevant to `kind` are populated; the rest are null.
+class LastAction {
+  final LastActionKind kind;
+  final int? playerId;
+  final PlayerActionType? type;
+  final int? delta;
 
-class OpponentScoreAction extends LastAction {
-  final int delta;
-  const OpponentScoreAction(this.delta);
+  const LastAction.playerStat({
+    required int this.playerId,
+    required PlayerActionType this.type,
+  })  : kind = LastActionKind.playerStat,
+        delta = null;
+
+  const LastAction.opponentScore(int this.delta)
+      : kind = LastActionKind.opponentScore,
+        playerId = null,
+        type = null;
 }
 
 
@@ -220,7 +228,7 @@ class LiveGameNotifier extends FamilyNotifier<LiveGameState, int> {
 
     try {
       // Compute the new stat row
-      final updated = _applyAction(stat, type, +1);
+      final updated = _applyAction(stat, type, 1);
       // Persist
       await db.updateGameStat(stat.id, updated);
       // The streaming query will fire shortly with the new row, but to
@@ -230,7 +238,7 @@ class LiveGameNotifier extends FamilyNotifier<LiveGameState, int> {
           ...state.statsByPlayerId,
           activeId: _materializeRow(stat, updated),
         },
-        lastAction: PlayerStatAction(playerId: activeId, type: type),
+        lastAction: LastAction.playerStat(playerId: activeId, type: type),
         isLogging: false,
       );
     } catch (_) {
@@ -252,7 +260,7 @@ class LiveGameNotifier extends FamilyNotifier<LiveGameState, int> {
       // Optimistic patch on game.
       state = state.copyWith(
         game: game.copyWith(opponentScore: game.opponentScore + delta),
-        lastAction: OpponentScoreAction(delta),
+        lastAction: LastAction.opponentScore(delta),
         isLogging: false,
       );
     } catch (_) {
@@ -269,17 +277,19 @@ class LiveGameNotifier extends FamilyNotifier<LiveGameState, int> {
 
     state = state.copyWith(isLogging: true);
     try {
-      switch (last) {
-        case PlayerStatAction():
-          final playerId = last.playerId;
-          final type = last.type;
+      switch (last.kind) {
+        case LastActionKind.playerStat:
+          final playerId = last.playerId!;
+          final type = last.type!;
           final stat = state.statsByPlayerId[playerId];
           if (stat == null) {
             state = state.copyWith(isLogging: false, clearLastAction: true);
             return;
           }
           final reverted = _applyAction(stat, type, -1);
-          await ref.read(appDatabaseProvider).updateGameStat(stat.id, reverted);
+          await ref
+              .read(appDatabaseProvider)
+              .updateGameStat(stat.id, reverted);
           state = state.copyWith(
             statsByPlayerId: {
               ...state.statsByPlayerId,
@@ -290,8 +300,8 @@ class LiveGameNotifier extends FamilyNotifier<LiveGameState, int> {
           );
           break;
 
-        case OpponentScoreAction():
-          final delta = last.delta;
+        case LastActionKind.opponentScore:
+          final delta = last.delta!;
           final game = state.game;
           if (game == null) {
             state = state.copyWith(isLogging: false, clearLastAction: true);
