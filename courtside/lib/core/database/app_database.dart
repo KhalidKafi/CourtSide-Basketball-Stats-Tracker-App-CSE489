@@ -294,6 +294,12 @@ class AppDatabase extends _$AppDatabase {
   Future<GameRow?> findGameById(int id) =>
       (select(games)..where((g) => g.id.equals(id))).getSingleOrNull();
 
+  /// Streaming version of findGameById. Emits the row whenever it changes,
+  /// or null if it doesn't exist (yet or anymore).
+  Stream<GameRow?> watchGameById(int id) {
+    return (select(games)..where((g) => g.id.equals(id))).watchSingleOrNull();
+  }
+
   Future<int> insertGame(GamesCompanion game) => into(games).insert(game);
 
   Future<int> updateGame(int id, GamesCompanion changes) =>

@@ -29,6 +29,10 @@ class GameRepository {
     return row == null ? null : _toGame(row);
   }
 
+  Stream<Game?> watchGameById(int id) {
+    return _db.watchGameById(id).map((row) => row == null ? null : _toGame(row));
+  }
+
   // ─── Mutations ──────────────────────────────────────────────────────────
 
   /// Creates a new game and pre-initializes a stat row for every player

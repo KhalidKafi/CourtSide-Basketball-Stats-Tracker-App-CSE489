@@ -270,7 +270,9 @@ class LiveGameNotifier extends FamilyNotifier<LiveGameState, int> {
     state = state.copyWith(isLogging: true);
     try {
       switch (last) {
-        case PlayerStatAction(:final playerId, :final type):
+        case PlayerStatAction():
+          final playerId = last.playerId;
+          final type = last.type;
           final stat = state.statsByPlayerId[playerId];
           if (stat == null) {
             state = state.copyWith(isLogging: false, clearLastAction: true);
@@ -288,7 +290,8 @@ class LiveGameNotifier extends FamilyNotifier<LiveGameState, int> {
           );
           break;
 
-        case OpponentScoreAction(:final delta):
+        case OpponentScoreAction():
+          final delta = last.delta;
           final game = state.game;
           if (game == null) {
             state = state.copyWith(isLogging: false, clearLastAction: true);
@@ -389,12 +392,8 @@ class LiveGameNotifier extends FamilyNotifier<LiveGameState, int> {
 /// Stream of the game itself. We use the in-progress watcher because it
 /// already filters by id once the notifier is bound to a specific gameId.
 final _gameStreamProvider =
-    StreamProvider.family<Game?, int>((ref, gameId) async* {
-  // Convert the one-shot `findById` into a stream that emits once and
-  // re-fetches on DB-wide changes. Simpler: poll the game by id reactively.
-  // We borrow the in-progress watcher for now.
-  // In a more polished build we'd add `watchGameById`, but this works.
-  yield await ref.read(gameRepositoryProvider).findById(gameId);
+    StreamProvider.family<Game?, int>((ref, gameId) {
+  return ref.watch(gameRepositoryProvider).watchGameById(gameId);
 });
 
 final _playersStreamProvider =
