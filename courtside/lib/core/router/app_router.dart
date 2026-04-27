@@ -30,10 +30,12 @@ class AppRoutes {
   static const adminHome = '/admin';
   static const superAdminHome = '/super-admin';
 
-  // Coach feature routes (Phase 2a+).
   static const coachTeams = '/coach/teams';
-  // Path pattern: /coach/teams/:teamId
   static String coachTeamDetail(int teamId) => '/coach/teams/$teamId';
+  static String teamGames(int teamId) => '/coach/teams/$teamId/games';
+  static String newGame(int teamId) => '/coach/teams/$teamId/games/new';
+  static String liveGame(int gameId) => '/coach/games/$gameId/live';
+  static String gameSummary(int gameId) => '/coach/games/$gameId/summary';
 }
 
 // ──────────────────────────────────────────────────────────────────────────
