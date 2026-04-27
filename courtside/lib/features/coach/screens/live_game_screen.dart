@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/database/app_database.dart';
 import '../../../core/router/app_router.dart';
 import '../../../models/game.dart';
 import '../../../models/player.dart';
@@ -159,9 +158,8 @@ class LiveGameScreen extends ConsumerWidget {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
+
 // Scoreboard
-// ──────────────────────────────────────────────────────────────────────────
 
 class _Scoreboard extends StatelessWidget {
   const _Scoreboard({
@@ -252,9 +250,8 @@ class _ScoreSide extends StatelessWidget {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
+
 // Opponent score strip — +1 / +2 / +3
-// ──────────────────────────────────────────────────────────────────────────
 
 class _OpponentScoreStrip extends StatelessWidget {
   const _OpponentScoreStrip({required this.enabled, required this.onBump});
@@ -290,9 +287,8 @@ class _OpponentScoreStrip extends StatelessWidget {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
+
 // Player selector row
-// ──────────────────────────────────────────────────────────────────────────
 
 class _PlayerSelectorRow extends StatelessWidget {
   const _PlayerSelectorRow({
@@ -417,9 +413,8 @@ class _PlayerChip extends StatelessWidget {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
+
 // Bottom panel — active player card + action grid
-// ──────────────────────────────────────────────────────────────────────────
 
 class _BottomPanel extends StatelessWidget {
   const _BottomPanel({
@@ -681,9 +676,8 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
+
 // End Game dialog
-// ──────────────────────────────────────────────────────────────────────────
 
 class _EndGameResult {
   final GameResult outcome;

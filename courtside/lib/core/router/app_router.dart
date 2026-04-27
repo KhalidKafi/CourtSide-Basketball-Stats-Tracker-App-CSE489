@@ -11,6 +11,7 @@ import '../../features/coach/screens/coach_dashboard_screen.dart';
 import '../../features/coach/screens/team_detail_screen.dart';
 import '../../features/coach/screens/game_list_screen.dart';
 import '../../features/coach/screens/new_game_screen.dart';
+import '../../features/coach/screens/live_game_screen.dart';
 import '../../features/coach/screens/team_list_screen.dart';
 import '../../features/super_admin/screens/super_admin_dashboard_screen.dart';
 import '../utils/user_role.dart';
@@ -147,6 +148,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/coach/games/:gameId/live',
+        builder: (_, state) {
+          final gameId = int.parse(state.pathParameters['gameId']!);
+          return LiveGameScreen(gameId: gameId);
+        },
+      ),
+      GoRoute(
+        path: '/coach/games/:gameId/summary',
         builder: (context, state) {
           final gameId = int.parse(state.pathParameters['gameId']!);
           return Scaffold(
@@ -155,7 +163,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.pop(),
               ),
-              title: const Text('Live Game (Step 7)'),
+              title: const Text('Game Summary'),
             ),
             body: Center(
               child: Padding(
@@ -165,12 +173,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   children: [
                     const Icon(Icons.construction, size: 64),
                     const SizedBox(height: 16),
-                    Text(
-                      'Live game ID: $gameId',
-                      style: const TextStyle(fontSize: 20),
-                    ),
+                    Text('Game $gameId finished',
+                        style: const TextStyle(fontSize: 20)),
                     const SizedBox(height: 8),
-                    const Text('Coming in Step 7'),
+                    const Text('Summary screen coming in Phase 2c'),
                   ],
                 ),
               ),
