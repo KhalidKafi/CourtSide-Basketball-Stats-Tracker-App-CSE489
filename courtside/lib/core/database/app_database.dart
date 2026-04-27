@@ -276,6 +276,87 @@ class AppDatabase extends _$AppDatabase {
     }
     return results.isNotEmpty;
   }
+
+  // ─── GAMES queries ──────────────────────────────────────────────────
+
+  /// Streaming list of games for a team, most recent first.
+  Stream<List<GameRow>> watchGamesForTeam(int teamId) {
+    return (select(games)
+          ..where((g) => g.teamId.equals(teamId))
+          ..orderBy([
+            (g) => OrderingTerm.desc(g.date),
+            (g) => OrderingTerm.desc(g.createdAt),
+          ]))
+        .watch();
+  }
+
+  /// One-shot game lookup.
+  Future<GameRow?> findGameById(int id) =>
+      (select(games)..where((g) => g.id.equals(id))).getSingleOrNull();
+
+  Future<int> insertGame(GamesCompanion game) => into(games).insert(game);
+
+  Future<int> updateGame(int id, GamesCompanion changes) =>
+      (update(games)..where((g) => g.id.equals(id))).write(changes);
+
+  Future<int> deleteGameById(int id) =>
+      (delete(games)..where((g) => g.id.equals(id))).go();
+
+  /// Streams the in-progress game for a team if any. There can be at most
+  /// one — the new game flow refuses to start a second if one is already
+  /// in progress. Returns null if none exists.
+  Stream<GameRow?> watchInProgressGameForTeam(int teamId) {
+    return (select(games)
+          ..where((g) =>
+              g.teamId.equals(teamId) & g.isFinished.equals(false))
+          ..limit(1))
+        .watchSingleOrNull();
+  }
+
+  // ─── GAME_STATS queries ─────────────────────────────────────────────
+
+  /// Streaming map of player_id → GameStatRow for one game. Used by the
+  /// live game screen to keep per-player stats in sync as actions are
+  /// logged. Returned as a list; the notifier turns it into a map.
+  Stream<List<GameStatRow>> watchStatsForGame(int gameId) {
+    return (select(gameStats)..where((s) => s.gameId.equals(gameId))).watch();
+  }
+
+  Future<List<GameStatRow>> getStatsForGame(int gameId) =>
+      (select(gameStats)..where((s) => s.gameId.equals(gameId))).get();
+
+  /// Inserts a zero-stat row for every player in the team. Called once
+  /// when a game is created so every player has a row to update during
+  /// the live session — no "row not found" branch needed in the hot path.
+  Future<void> initializeStatsForGame({
+    required int gameId,
+    required List<int> playerIds,
+  }) async {
+    await batch((b) {
+      b.insertAll(
+        gameStats,
+        [
+          for (final playerId in playerIds)
+            GameStatsCompanion.insert(gameId: gameId, playerId: playerId),
+        ],
+      );
+    });
+  }
+
+  /// Updates a single stat row. Used by the live action handler.
+  Future<int> updateGameStat(int statId, GameStatsCompanion changes) =>
+      (update(gameStats)..where((s) => s.id.equals(statId))).write(changes);
+
+  /// Finds a stat row by (gameId, playerId). The unique key on these
+  /// two columns guarantees at most one match.
+  Future<GameStatRow?> findStatRow({
+    required int gameId,
+    required int playerId,
+  }) =>
+      (select(gameStats)
+            ..where(
+                (s) => s.gameId.equals(gameId) & s.playerId.equals(playerId)))
+          .getSingleOrNull();
 }
 
 // ─────────────────────────────────────────────────────────────────────────
