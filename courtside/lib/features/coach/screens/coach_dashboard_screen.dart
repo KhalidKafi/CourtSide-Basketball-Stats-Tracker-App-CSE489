@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../models/game.dart';
+import '../../../models/recent_game.dart';
 import '../../../models/team.dart';
 import '../../auth/viewmodels/auth_notifier.dart';
 import '../viewmodels/game_notifiers.dart';
@@ -55,7 +56,7 @@ class CoachDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               _RecentTeamsList(teamsAsync: teamsAsync),
               const SizedBox(height: 20),
-              _SectionHeader(
+              const _SectionHeader(
                 title: 'Recent Games',
                 actionLabel: null,
                 onAction: null,
@@ -399,7 +400,7 @@ class _NoTeamsCard extends StatelessWidget {
 
 class _RecentGamesList extends StatelessWidget {
   const _RecentGamesList({required this.gamesAsync});
-  final AsyncValue<List<Game>> gamesAsync;
+  final AsyncValue<List<RecentGame>> gamesAsync;
 
   @override
   Widget build(BuildContext context) {
@@ -414,10 +415,10 @@ class _RecentGamesList extends StatelessWidget {
         final recent = games.take(3).toList();
         return Column(
           children: [
-            for (final g in recent)
+            for (final rg in recent)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _MiniGameTile(game: g),
+                child: _MiniGameTile(recentGame: rg),
               ),
           ],
         );
@@ -427,11 +428,12 @@ class _RecentGamesList extends StatelessWidget {
 }
 
 class _MiniGameTile extends StatelessWidget {
-  const _MiniGameTile({required this.game});
-  final Game game;
+  const _MiniGameTile({required this.recentGame});
+  final RecentGame recentGame;
 
   @override
   Widget build(BuildContext context) {
+    final game = recentGame.game;
     final colorScheme = Theme.of(context).colorScheme;
     final (chipLabel, chipBg, chipFg) = _resultStyle(game, colorScheme);
 
@@ -465,6 +467,17 @@ class _MiniGameTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      recentGame.teamName,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
                     Text(
                       'vs ${game.opponent}',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(

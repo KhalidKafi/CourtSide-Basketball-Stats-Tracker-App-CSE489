@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/database/app_database.dart';
 import '../../../models/game.dart';
+import '../../../models/recent_game.dart';
 import '../../../repositories/providers.dart';
 import '../../auth/viewmodels/auth_notifier.dart';
 
@@ -29,16 +29,17 @@ final gameByIdProvider = FutureProvider.family<Game?, int>((ref, gameId) {
   return ref.watch(gameRepositoryProvider).findById(gameId);
 });
 
-/// Streams the most recent games across all of a coach's teams. Used by
-/// the Coach Dashboard's "Recent Games" section.
+/// Streams the most recent games (with team names) across all of a coach's
+/// teams. Used by the Coach Dashboard's "Recent Games" section.
 final recentGamesForCoachProvider =
-    StreamProvider.family<List<Game>, int>((ref, coachId) {
+    StreamProvider.family<List<RecentGame>, int>((ref, coachId) {
   final db = ref.watch(appDatabaseProvider);
   return db
-      .watchRecentGamesForCoach(coachId: coachId, limit: 5)
-      .map((rows) {
-    return rows.map((r) {
-      return Game(
+      .watchRecentGamesWithTeamNameForCoach(coachId: coachId, limit: 5)
+      .map((tuples) {
+    return tuples.map((t) {
+      final r = t.game;
+      final game = Game(
         id: r.id,
         opponent: r.opponent,
         date: DateTime.parse(r.date),
@@ -49,6 +50,7 @@ final recentGamesForCoachProvider =
         isFinished: r.isFinished,
         createdAt: r.createdAt,
       );
+      return RecentGame(game: game, teamName: t.teamName);
     }).toList();
   });
 });

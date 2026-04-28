@@ -290,9 +290,10 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
-  /// Streams the most recent games across ALL teams owned by a coach.
-  /// Returns at most `limit` games, ordered by date desc.
-  Stream<List<GameRow>> watchRecentGamesForCoach({
+  /// Streams the most recent games + their team names across ALL teams
+  /// owned by a coach. Returns a list of (GameRow, teamName) tuples.
+  Stream<List<({GameRow game, String teamName})>>
+      watchRecentGamesWithTeamNameForCoach({
     required int coachId,
     int limit = 5,
   }) {
@@ -307,7 +308,12 @@ class AppDatabase extends _$AppDatabase {
       ..limit(limit);
 
     return query.watch().map(
-          (rows) => rows.map((r) => r.readTable(games)).toList(),
+          (rows) => rows
+              .map((r) => (
+                    game: r.readTable(games),
+                    teamName: r.readTable(teams).teamName,
+                  ))
+              .toList(),
         );
   }
 
