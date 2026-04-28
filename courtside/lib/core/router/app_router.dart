@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/screens/admin_dashboard_screen.dart';
@@ -8,11 +8,11 @@ import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/viewmodels/auth_notifier.dart';
 import '../../features/coach/screens/coach_dashboard_screen.dart';
+import '../../features/coach/screens/game_summary_screen.dart';
 import '../../features/coach/screens/team_detail_screen.dart';
 import '../../features/coach/screens/game_list_screen.dart';
 import '../../features/coach/screens/new_game_screen.dart';
 import '../../features/coach/screens/live_game_screen.dart';
-import '../../features/coach/viewmodels/game_notifiers.dart';
 import '../../features/coach/screens/team_list_screen.dart';
 import '../../features/super_admin/screens/super_admin_dashboard_screen.dart';
 import '../utils/user_role.dart';
@@ -158,7 +158,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/coach/games/:gameId/summary',
         builder: (_, state) {
           final gameId = int.parse(state.pathParameters['gameId']!);
-          return _GameSummaryStub(gameId: gameId);
+          return GameSummaryScreen(gameId: gameId);
         },
       ),
       GoRoute(
@@ -184,57 +184,5 @@ String _homeForRole(UserRole role) {
       return AppRoutes.adminHome;
     case UserRole.superAdmin:
       return AppRoutes.superAdminHome;
-  }
-}
-
-/// Temporary stub for the game summary screen — replaced by the real
-/// summary in Phase 2c.
-class _GameSummaryStub extends ConsumerWidget {
-  const _GameSummaryStub({required this.gameId});
-  final int gameId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final gameAsync = ref.watch(gameByIdProvider(gameId));
-
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => _navigateBack(context, gameAsync.value?.teamId),
-        ),
-        title: const Text('Game Summary'),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.construction, size: 64),
-              const SizedBox(height: 16),
-              Text('Game $gameId finished',
-                  style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              const Text('Summary screen coming in Phase 2c'),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () => _navigateBack(context, gameAsync.value?.teamId),
-                icon: const Icon(Icons.list),
-                label: const Text('Back to Games'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateBack(BuildContext context, int? teamId) {
-    if (teamId != null) {
-      context.go(AppRoutes.teamGames(teamId));
-    } else {
-      context.go(AppRoutes.coachHome);
-    }
   }
 }
