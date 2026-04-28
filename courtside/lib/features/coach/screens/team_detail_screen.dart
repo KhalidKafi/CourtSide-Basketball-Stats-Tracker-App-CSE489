@@ -181,6 +181,8 @@ class _TeamDetailBody extends StatelessWidget {
         _TeamInfoCard(team: team),
         const SizedBox(height: 16),
         _GamesShortcut(team: team),
+        const SizedBox(height: 12),
+        _AnalyticsShortcut(team: team),
         const SizedBox(height: 24),
         _RosterHeader(playersAsync: playersAsync),
         const SizedBox(height: 12),
@@ -655,6 +657,66 @@ class _GamesShortcut extends StatelessWidget {
                     Text(
                       'View, create, and record live games',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AnalyticsShortcut extends StatelessWidget {
+  const _AnalyticsShortcut({required this.team});
+  final Team team;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.go(AppRoutes.teamAnalytics(team.id)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: colorScheme.secondaryContainer,
+                child: Icon(
+                  Icons.bar_chart,
+                  color: colorScheme.onSecondaryContainer,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Season Analytics',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Win record, points charts, leaderboard',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
                     ),

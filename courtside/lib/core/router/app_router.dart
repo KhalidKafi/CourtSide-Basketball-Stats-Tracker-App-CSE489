@@ -9,6 +9,7 @@ import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/viewmodels/auth_notifier.dart';
 import '../../features/coach/screens/coach_dashboard_screen.dart';
 import '../../features/coach/screens/game_summary_screen.dart';
+import '../../features/coach/screens/season_analytics_screen.dart';
 import '../../features/coach/screens/team_detail_screen.dart';
 import '../../features/coach/screens/game_list_screen.dart';
 import '../../features/coach/screens/new_game_screen.dart';
@@ -40,6 +41,10 @@ class AppRoutes {
   static String newGame(int teamId) => '/coach/teams/$teamId/games/new';
   static String liveGame(int gameId) => '/coach/games/$gameId/live';
   static String gameSummary(int gameId) => '/coach/games/$gameId/summary';
+  static String teamAnalytics(int teamId) =>
+      '/coach/teams/$teamId/analytics';
+  static String playerProfile(int teamId, int playerId) =>
+      '/coach/teams/$teamId/players/$playerId';
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -159,6 +164,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final gameId = int.parse(state.pathParameters['gameId']!);
           return GameSummaryScreen(gameId: gameId);
+        },
+      ),
+      GoRoute(
+        path: '/coach/teams/:teamId/analytics',
+        builder: (_, state) {
+          final teamId = int.parse(state.pathParameters['teamId']!);
+          return SeasonAnalyticsScreen(teamId: teamId);
         },
       ),
       GoRoute(
