@@ -290,6 +290,27 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  /// Streams the most recent games across ALL teams owned by a coach.
+  /// Returns at most `limit` games, ordered by date desc.
+  Stream<List<GameRow>> watchRecentGamesForCoach({
+    required int coachId,
+    int limit = 5,
+  }) {
+    final query = select(games).join([
+      innerJoin(teams, teams.id.equalsExp(games.teamId)),
+    ])
+      ..where(teams.coachId.equals(coachId))
+      ..orderBy([
+        OrderingTerm.desc(games.date),
+        OrderingTerm.desc(games.createdAt),
+      ])
+      ..limit(limit);
+
+    return query.watch().map(
+          (rows) => rows.map((r) => r.readTable(games)).toList(),
+        );
+  }
+
   /// One-shot game lookup.
   Future<GameRow?> findGameById(int id) =>
       (select(games)..where((g) => g.id.equals(id))).getSingleOrNull();

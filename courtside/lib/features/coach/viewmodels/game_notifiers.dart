@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/database/app_database.dart';
 import '../../../models/game.dart';
 import '../../../repositories/providers.dart';
+import '../../auth/viewmodels/auth_notifier.dart';
 
 // Streaming read providers
 
@@ -25,6 +27,30 @@ final inProgressGameForTeamProvider =
 /// methods, so a stream isn't necessary.
 final gameByIdProvider = FutureProvider.family<Game?, int>((ref, gameId) {
   return ref.watch(gameRepositoryProvider).findById(gameId);
+});
+
+/// Streams the most recent games across all of a coach's teams. Used by
+/// the Coach Dashboard's "Recent Games" section.
+final recentGamesForCoachProvider =
+    StreamProvider.family<List<Game>, int>((ref, coachId) {
+  final db = ref.watch(appDatabaseProvider);
+  return db
+      .watchRecentGamesForCoach(coachId: coachId, limit: 5)
+      .map((rows) {
+    return rows.map((r) {
+      return Game(
+        id: r.id,
+        opponent: r.opponent,
+        date: DateTime.parse(r.date),
+        homeAway: HomeAwayX.fromCode(r.homeAway),
+        result: r.result == null ? null : GameResultX.fromCode(r.result!),
+        opponentScore: r.opponentScore,
+        teamId: r.teamId,
+        isFinished: r.isFinished,
+        createdAt: r.createdAt,
+      );
+    }).toList();
+  });
 });
 
 

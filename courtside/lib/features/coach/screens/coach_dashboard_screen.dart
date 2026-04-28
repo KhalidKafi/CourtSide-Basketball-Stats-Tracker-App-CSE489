@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../models/game.dart';
 import '../../../models/team.dart';
 import '../../auth/viewmodels/auth_notifier.dart';
+import '../viewmodels/game_notifiers.dart';
 import '../viewmodels/team_notifiers.dart';
 
 class CoachDashboardScreen extends ConsumerWidget {
@@ -19,6 +21,7 @@ class CoachDashboardScreen extends ConsumerWidget {
 
     final teamsAsync = ref.watch(teamsForCoachProvider(user.id));
     final totalPlayersAsync = ref.watch(totalPlayersForCoachProvider(user.id));
+    final recentGamesAsync = ref.watch(recentGamesForCoachProvider(user.id));
 
     return Scaffold(
       appBar: AppBar(
@@ -51,6 +54,14 @@ class CoachDashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               _RecentTeamsList(teamsAsync: teamsAsync),
+              const SizedBox(height: 20),
+              _SectionHeader(
+                title: 'Recent Games',
+                actionLabel: null,
+                onAction: null,
+              ),
+              const SizedBox(height: 12),
+              _RecentGamesList(gamesAsync: recentGamesAsync),
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: () => context.go(AppRoutes.coachTeams),
@@ -235,13 +246,13 @@ class _StatCard extends StatelessWidget {
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.title,
-    required this.actionLabel,
-    required this.onAction,
+    this.actionLabel,
+    this.onAction,
   });
 
   final String title;
-  final String actionLabel;
-  final VoidCallback onAction;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -254,7 +265,8 @@ class _SectionHeader extends StatelessWidget {
               ),
         ),
         const Spacer(),
-        TextButton(onPressed: onAction, child: Text(actionLabel)),
+        if (actionLabel != null && onAction != null)
+          TextButton(onPressed: onAction, child: Text(actionLabel!)),
       ],
     );
   }
@@ -373,6 +385,178 @@ class _NoTeamsCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Tap "Manage Teams" below to create one.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecentGamesList extends StatelessWidget {
+  const _RecentGamesList({required this.gamesAsync});
+  final AsyncValue<List<Game>> gamesAsync;
+
+  @override
+  Widget build(BuildContext context) {
+    return gamesAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (games) {
+        if (games.isEmpty) return const _NoGamesCard();
+        final recent = games.take(3).toList();
+        return Column(
+          children: [
+            for (final g in recent)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _MiniGameTile(game: g),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MiniGameTile extends StatelessWidget {
+  const _MiniGameTile({required this.game});
+  final Game game;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final (chipLabel, chipBg, chipFg) = _resultStyle(game, colorScheme);
+
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          if (!game.isFinished) {
+            context.go(AppRoutes.liveGame(game.id));
+          } else {
+            context.go(AppRoutes.gameSummary(game.id));
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: colorScheme.secondaryContainer,
+                child: Icon(
+                  game.homeAway == HomeAway.home
+                      ? Icons.home_outlined
+                      : Icons.flight_takeoff_outlined,
+                  size: 18,
+                  color: colorScheme.onSecondaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'vs ${game.opponent}',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _subtitle(game),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: chipBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  chipLabel,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: chipFg,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _subtitle(Game g) {
+    final dateStr =
+        '${g.date.year}-${g.date.month.toString().padLeft(2, '0')}-${g.date.day.toString().padLeft(2, '0')}';
+    if (g.isFinished) {
+      return '$dateStr  ·  Opp ${g.opponentScore}';
+    }
+    return '$dateStr  ·  In progress';
+  }
+
+  (String, Color, Color) _resultStyle(Game g, ColorScheme cs) {
+    if (!g.isFinished) {
+      return ('LIVE', cs.primary, cs.onPrimary);
+    }
+    switch (g.result) {
+      case GameResult.win:
+        return ('WIN', Colors.green.shade100, Colors.green.shade900);
+      case GameResult.loss:
+        return ('LOSS', Colors.red.shade100, Colors.red.shade900);
+      case null:
+        return ('—', cs.surfaceContainerHighest, cs.onSurfaceVariant);
+    }
+  }
+}
+
+class _NoGamesCard extends StatelessWidget {
+  const _NoGamesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Icon(
+              Icons.sports_basketball_outlined,
+              size: 36,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No games yet',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Pick a team to set up your first game.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
