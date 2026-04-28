@@ -390,6 +390,50 @@ class AppDatabase extends _$AppDatabase {
             ..where(
                 (s) => s.gameId.equals(gameId) & s.playerId.equals(playerId)))
           .getSingleOrNull();
+
+  // ─── Analytics queries ────────
+
+  /// Streams ALL stat rows for ALL games of a team, joined so we can
+  /// see which game each row belongs to. Used for season analytics —
+  /// the screen aggregates these in Dart for flexibility.
+  Stream<List<({GameStatRow stat, GameRow game})>>
+      watchSeasonStatsForTeam(int teamId) {
+    final query = select(gameStats).join([
+      innerJoin(games, games.id.equalsExp(gameStats.gameId)),
+    ])
+      ..where(games.teamId.equals(teamId) & games.isFinished.equals(true))
+      ..orderBy([OrderingTerm.asc(games.date)]);
+
+    return query.watch().map(
+          (rows) => rows
+              .map((r) => (
+                    stat: r.readTable(gameStats),
+                    game: r.readTable(games),
+                  ))
+              .toList(),
+        );
+  }
+
+  /// Streams all stat rows for one player across all their team's finished
+  /// games. Used by the player profile screen.
+  Stream<List<({GameStatRow stat, GameRow game})>>
+      watchSeasonStatsForPlayer(int playerId) {
+    final query = select(gameStats).join([
+      innerJoin(games, games.id.equalsExp(gameStats.gameId)),
+    ])
+      ..where(gameStats.playerId.equals(playerId) &
+          games.isFinished.equals(true))
+      ..orderBy([OrderingTerm.asc(games.date)]);
+
+    return query.watch().map(
+          (rows) => rows
+              .map((r) => (
+                    stat: r.readTable(gameStats),
+                    game: r.readTable(games),
+                  ))
+              .toList(),
+        );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
