@@ -10,6 +10,7 @@ import '../../features/auth/viewmodels/auth_notifier.dart';
 import '../../features/coach/screens/coach_dashboard_screen.dart';
 import '../../features/coach/screens/game_summary_screen.dart';
 import '../../features/coach/screens/season_analytics_screen.dart';
+import '../../features/coach/screens/player_profile_screen.dart';
 import '../../features/coach/screens/team_detail_screen.dart';
 import '../../features/coach/screens/game_list_screen.dart';
 import '../../features/coach/screens/new_game_screen.dart';
@@ -171,6 +172,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final teamId = int.parse(state.pathParameters['teamId']!);
           return SeasonAnalyticsScreen(teamId: teamId);
+        },
+      ),
+      GoRoute(
+        path: '/coach/teams/:teamId/players/:playerId',
+        builder: (_, state) {
+          final teamId = int.parse(state.pathParameters['teamId']!);
+          final playerId = int.parse(state.pathParameters['playerId']!);
+          return PlayerProfileScreen(teamId: teamId, playerId: playerId);
         },
       ),
       GoRoute(
