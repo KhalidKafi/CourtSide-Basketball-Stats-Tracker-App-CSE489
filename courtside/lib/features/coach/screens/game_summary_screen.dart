@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-
+import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/router/app_router.dart';
@@ -49,13 +53,23 @@ class GameSummaryScreen extends ConsumerWidget {
   }
 }
 
-class _SummaryView extends ConsumerWidget {
+class _SummaryView extends ConsumerStatefulWidget {
   const _SummaryView({required this.data, required this.gameId});
   final GameSummaryData data;
   final int gameId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SummaryView> createState() => _SummaryViewState();
+}
+
+class _SummaryViewState extends ConsumerState<_SummaryView> {
+  final _screenshotController = ScreenshotController();
+
+  GameSummaryData get data => widget.data;
+  int get gameId => widget.gameId;
+
+  @override
+  Widget build(BuildContext context) {
     final game = data.game;
 
     return PopScope(
@@ -74,7 +88,8 @@ class _SummaryView extends ConsumerWidget {
           actions: [
             Consumer(
               builder: (context, ref, _) {
-                final teamAsync = ref.watch(teamByIdProvider(game.teamId));
+                final teamAsync =
+                    ref.watch(teamByIdProvider(game.teamId));
                 return IconButton(
                   icon: const Icon(Icons.picture_as_pdf_outlined),
                   tooltip: 'Export PDF',
@@ -84,28 +99,41 @@ class _SummaryView extends ConsumerWidget {
                 );
               },
             ),
+            IconButton(
+              icon: const Icon(Icons.image_outlined),
+              tooltip: 'Share as image',
+              onPressed: _shareAsImage,
+            ),
           ],
         ),
         body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _ResultBanner(data: data),
-                const SizedBox(height: 16),
-                _GameMetaCard(game: game),
-                const SizedBox(height: 24),
-                Text(
-                  'Player Stats',
-                  style:
-                      Theme.of(context).textTheme.titleMedium?.copyWith(
+          child: Screenshot(
+            controller: _screenshotController,
+            child: Container(
+              color: Theme.of(context).colorScheme.surface,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _ResultBanner(data: data),
+                    const SizedBox(height: 16),
+                    _GameMetaCard(game: game),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Player Stats',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
+                    ),
+                    const SizedBox(height: 12),
+                    _PlayerStatsTable(data: data),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                _PlayerStatsTable(data: data),
-              ],
+              ),
             ),
           ),
         ),
@@ -113,7 +141,66 @@ class _SummaryView extends ConsumerWidget {
     );
   }
 
+  Future<void> _shareAsImage() async {
+    try {
+      final bytes = await _screenshotController.capture(pixelRatio: 3.0);
+      if (bytes == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not capture screenshot.')),
+        );
+        return;
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final filename =
+          'CourtSide_${data.game.opponent}_${DateTime.now().millisecondsSinceEpoch}.png'
+              .replaceAll(' ', '_');
+      final file = File('${tempDir.path}/$filename');
+      await file.writeAsBytes(bytes);
+
+      if (!mounted) return;
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'image/png')],
+        text: 'Game summary: ${data.game.opponent}',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not share: $e')),
+      );
+    }
+  }
+
   Future<void> _exportPdf(BuildContext context, Team team) async {
+    final action = await showModalBottomSheet<_ExportAction>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf_outlined),
+              title: const Text('Save or print PDF'),
+              subtitle: const Text('Open in print preview'),
+              onTap: () => Navigator.pop(ctx, _ExportAction.print),
+            ),
+            ListTile(
+              leading: const Icon(Icons.share_outlined),
+              title: const Text('Share PDF...'),
+              subtitle: const Text('Send via apps installed on your device'),
+              onTap: () => Navigator.pop(ctx, _ExportAction.share),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (action == null || !context.mounted) return;
+
     try {
       final doc = await GameSummaryPdf.build(
         team: team,
@@ -121,10 +208,19 @@ class _SummaryView extends ConsumerWidget {
         players: data.players,
         statsByPlayerId: data.statsByPlayerId,
       );
-      await Printing.layoutPdf(
-        onLayout: (_) async => doc.save(),
-        name: 'CourtSide_${team.name}_vs_${data.game.opponent}.pdf',
-      );
+      final bytes = await doc.save();
+      final filename =
+          'CourtSide_${team.name}_vs_${data.game.opponent}.pdf'
+              .replaceAll(' ', '_');
+
+      if (action == _ExportAction.print) {
+        await Printing.layoutPdf(
+          onLayout: (_) async => bytes,
+          name: filename,
+        );
+      } else {
+        await Printing.sharePdf(bytes: bytes, filename: filename);
+      }
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -330,3 +426,5 @@ class _PlayerStatsTable extends StatelessWidget {
     return '${v.toStringAsFixed(1)}%';
   }
 }
+
+enum _ExportAction { print, share }

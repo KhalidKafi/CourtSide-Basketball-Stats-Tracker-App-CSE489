@@ -434,6 +434,95 @@ class AppDatabase extends _$AppDatabase {
               .toList(),
         );
   }
+
+  // ─── Admin / Super Admin queries ────────────────────────────────────
+
+  Stream<List<User>> watchAllCoaches() {
+    return (select(users)
+          ..where((u) => u.role.equals('coach'))
+          ..orderBy([(u) => OrderingTerm.asc(u.name)]))
+        .watch();
+  }
+
+  Stream<List<User>> watchAllAdmins() {
+    return (select(users)
+          ..where((u) => u.role.equals('admin'))
+          ..orderBy([(u) => OrderingTerm.asc(u.createdAt)]))
+        .watch();
+  }
+
+  Future<int> setUserDisabled(int userId, bool disabled) {
+    return (update(users)..where((u) => u.id.equals(userId)))
+        .write(UsersCompanion(isDisabled: Value(disabled)));
+  }
+
+  Stream<({int coaches, int teams, int players, int games})>
+      watchSystemCounts() async* {
+    yield await _readSystemCounts();
+    await for (final _ in tableUpdates(
+        TableUpdateQuery.onAllTables([users, teams, players, games]))) {
+      yield await _readSystemCounts();
+    }
+  }
+
+  Future<({int coaches, int teams, int players, int games})>
+      _readSystemCounts() async {
+    final c = await _countCoaches();
+    final t = await _countAll(teams);
+    final p = await _countAll(players);
+    final g = await _countAll(games);
+    return (coaches: c, teams: t, players: p, games: g);
+  }
+
+  Future<int> _countCoaches() async {
+    final exp = users.id.count();
+    final row = await (selectOnly(users)
+          ..addColumns([exp])
+          ..where(users.role.equals('coach')))
+        .getSingle();
+    return row.read(exp) ?? 0;
+  }
+
+  Future<int> _countAll<T extends HasResultSet, R>(
+      ResultSetImplementation<T, R> table) async {
+    final exp = countAll();
+    final row = await (selectOnly(table)..addColumns([exp])).getSingle();
+    return row.read(exp) ?? 0;
+  }
+
+  // ─── Flags queries ──────────────────────────────────────────────────
+
+  Stream<List<Flag>> watchUnresolvedFlags() {
+    return (select(flags)
+          ..where((f) => f.resolved.equals(false))
+          ..orderBy([(f) => OrderingTerm.desc(f.flaggedAt)]))
+        .watch();
+  }
+
+  Future<int> insertFlag(FlagsCompanion flag) => into(flags).insert(flag);
+
+  Future<int> resolveFlag({
+    required int flagId,
+    required int superAdminId,
+  }) {
+    return (update(flags)..where((f) => f.id.equals(flagId))).write(
+      FlagsCompanion(
+        resolved: const Value(true),
+        resolvedBySuperAdminId: Value(superAdminId),
+        resolvedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<int> deleteFlagsForTarget({
+    required String targetType,
+    required int targetId,
+  }) {
+    return (delete(flags)
+          ..where((f) =>
+              f.targetType.equals(targetType) & f.targetId.equals(targetId)))
+        .go();
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────

@@ -87,15 +87,52 @@ class PlayerProfileScreen extends ConsumerWidget {
       );
       return;
     }
+
+    final action = await showModalBottomSheet<_ExportAction>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf_outlined),
+              title: const Text('Save or print PDF'),
+              subtitle: const Text('Open in print preview'),
+              onTap: () => Navigator.pop(ctx, _ExportAction.print),
+            ),
+            ListTile(
+              leading: const Icon(Icons.share_outlined),
+              title: const Text('Share PDF...'),
+              subtitle: const Text('Send via apps installed on your device'),
+              onTap: () => Navigator.pop(ctx, _ExportAction.share),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (action == null || !context.mounted) return;
+
     try {
       final doc = await PlayerProfilePdf.build(
         team: team,
         data: data,
       );
-      await Printing.layoutPdf(
-        onLayout: (_) async => doc.save(),
-        name: 'CourtSide_${data.player.name}_${team.season}.pdf',
-      );
+      final bytes = await doc.save();
+      final filename =
+          'CourtSide_${data.player.name}_${team.season}.pdf'
+              .replaceAll(' ', '_');
+
+      if (action == _ExportAction.print) {
+        await Printing.layoutPdf(
+          onLayout: (_) async => bytes,
+          name: filename,
+        );
+      } else {
+        await Printing.sharePdf(bytes: bytes, filename: filename);
+      }
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -673,3 +710,5 @@ class _PlayerGoneBlock extends StatelessWidget {
     );
   }
 }
+
+enum _ExportAction { print, share }
