@@ -1,5 +1,3 @@
-import 'package:drift/drift.dart' show Value;
-
 import '../core/database/app_database.dart';
 import '../core/utils/user_role.dart';
 import '../models/app_user.dart';
@@ -17,8 +15,7 @@ class AdminRepository {
         );
   }
 
-  Stream<({int coaches, int teams, int players, int games})>
-      watchSystemCounts() {
+  Stream<SystemCounts> watchSystemCounts() {
     return _db.watchSystemCounts();
   }
 

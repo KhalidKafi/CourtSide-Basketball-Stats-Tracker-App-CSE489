@@ -12,6 +12,12 @@ import 'package:path_provider/path_provider.dart';
 part 'app_database.g.dart';
 
 // ─────────────────────────────────────────────────────────────────────────
+// Type definitions
+// ─────────────────────────────────────────────────────────────────────────
+
+typedef SystemCounts = ({int coaches, int teams, int players, int games});
+
+// ─────────────────────────────────────────────────────────────────────────
 // Tables
 //
 // Each class below describes one SQL table. Drift reads these at
@@ -456,8 +462,7 @@ class AppDatabase extends _$AppDatabase {
         .write(UsersCompanion(isDisabled: Value(disabled)));
   }
 
-  Stream<({int coaches, int teams, int players, int games})>
-      watchSystemCounts() async* {
+  Stream<SystemCounts> watchSystemCounts() async* {
     yield await _readSystemCounts();
     await for (final _ in tableUpdates(
         TableUpdateQuery.onAllTables([users, teams, players, games]))) {
@@ -465,8 +470,7 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  Future<({int coaches, int teams, int players, int games})>
-      _readSystemCounts() async {
+  Future<SystemCounts> _readSystemCounts() async {
     final c = await _countCoaches();
     final t = await _countAll(teams);
     final p = await _countAll(players);

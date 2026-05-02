@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/database/app_database.dart';
 import '../../../models/app_user.dart';
 import '../../../repositories/providers.dart';
 
@@ -9,8 +10,7 @@ final allCoachesProvider = StreamProvider<List<AppUser>>((ref) {
   return ref.watch(adminRepositoryProvider).watchAllCoaches();
 });
 
-final systemCountsProvider = StreamProvider
-    ({int coaches, int teams, int players, int games})>((ref) {
+final systemCountsProvider = StreamProvider<SystemCounts>((ref) {
   return ref.watch(adminRepositoryProvider).watchSystemCounts();
 });
 
