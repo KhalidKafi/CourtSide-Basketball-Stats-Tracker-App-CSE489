@@ -4,11 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:printing/printing.dart';
+
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/stats_calculator.dart';
 import '../../../models/game.dart';
 import '../../../models/player.dart';
+import '../../../models/team.dart';
+import '../pdf/player_profile_pdf.dart';
 import '../viewmodels/stats_notifiers.dart';
+import '../viewmodels/team_notifiers.dart';
 
 class PlayerProfileScreen extends ConsumerWidget {
   const PlayerProfileScreen({
@@ -40,6 +45,22 @@ class PlayerProfileScreen extends ConsumerWidget {
             error: (_, __) => const Text('Player'),
             data: (d) => Text(d?.player.name ?? 'Player'),
           ),
+          actions: [
+            Consumer(
+              builder: (context, ref, _) {
+                final teamAsync = ref.watch(teamByIdProvider(teamId));
+                return IconButton(
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  tooltip: 'Export PDF',
+                  onPressed: () => _exportPdf(
+                    context,
+                    teamAsync.value,
+                    dataAsync.value,
+                  ),
+                );
+              },
+            ),
+          ],
         ),
         body: dataAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -53,6 +74,34 @@ class PlayerProfileScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _exportPdf(
+    BuildContext context,
+    Team? team,
+    PlayerProfileData? data,
+  ) async {
+    if (team == null || data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Wait for the data to load.')),
+      );
+      return;
+    }
+    try {
+      final doc = await PlayerProfilePdf.build(
+        team: team,
+        data: data,
+      );
+      await Printing.layoutPdf(
+        onLayout: (_) async => doc.save(),
+        name: 'CourtSide_${data.player.name}_${team.season}.pdf',
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate PDF: $e')),
+      );
+    }
   }
 }
 

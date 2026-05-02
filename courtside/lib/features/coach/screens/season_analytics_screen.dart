@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:printing/printing.dart';
+
 import '../../../core/router/app_router.dart';
 import '../../../models/game.dart';
+import '../../../models/team.dart';
+import '../pdf/season_analytics_pdf.dart';
 import '../viewmodels/stats_notifiers.dart';
 import '../viewmodels/team_notifiers.dart';
 
@@ -36,6 +40,17 @@ class SeasonAnalyticsScreen extends ConsumerWidget {
             error: (_, __) => const Text('Season Analytics'),
             data: (team) => Text(team?.name ?? 'Season Analytics'),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              tooltip: 'Export PDF',
+              onPressed: () => _exportPdf(
+                context,
+                teamAsync.value,
+                analyticsAsync.value,
+              ),
+            ),
+          ],
         ),
         body: analyticsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -52,6 +67,34 @@ class SeasonAnalyticsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _exportPdf(
+    BuildContext context,
+    Team? team,
+    SeasonAnalytics? analytics,
+  ) async {
+    if (team == null || analytics == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Wait for the data to load.')),
+      );
+      return;
+    }
+    try {
+      final doc = await SeasonAnalyticsPdf.build(
+        team: team,
+        analytics: analytics,
+      );
+      await Printing.layoutPdf(
+        onLayout: (_) async => doc.save(),
+        name: 'CourtSide_${team.name}_${team.season}_Analytics.pdf',
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate PDF: $e')),
+      );
+    }
   }
 }
 

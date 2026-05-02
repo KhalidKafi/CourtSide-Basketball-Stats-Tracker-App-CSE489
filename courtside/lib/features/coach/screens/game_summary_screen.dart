@@ -3,12 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:printing/printing.dart';
+
 import '../../../core/database/app_database.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/stats_calculator.dart';
 import '../../../models/game.dart';
 import '../../../models/player.dart';
+import '../../../models/team.dart';
 import '../viewmodels/stats_notifiers.dart';
+import '../viewmodels/team_notifiers.dart';
+import '../pdf/game_summary_pdf.dart';
 
 class GameSummaryScreen extends ConsumerWidget {
   const GameSummaryScreen({super.key, required this.gameId});
@@ -66,6 +71,20 @@ class _SummaryView extends ConsumerWidget {
                 context.go(AppRoutes.teamGames(game.teamId)),
           ),
           title: const Text('Game Summary'),
+          actions: [
+            Consumer(
+              builder: (context, ref, _) {
+                final teamAsync = ref.watch(teamByIdProvider(game.teamId));
+                return IconButton(
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  tooltip: 'Export PDF',
+                  onPressed: teamAsync.value == null
+                      ? null
+                      : () => _exportPdf(context, teamAsync.value!),
+                );
+              },
+            ),
+          ],
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -92,6 +111,26 @@ class _SummaryView extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _exportPdf(BuildContext context, Team team) async {
+    try {
+      final doc = await GameSummaryPdf.build(
+        team: team,
+        game: data.game,
+        players: data.players,
+        statsByPlayerId: data.statsByPlayerId,
+      );
+      await Printing.layoutPdf(
+        onLayout: (_) async => doc.save(),
+        name: 'CourtSide_${team.name}_vs_${data.game.opponent}.pdf',
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate PDF: $e')),
+      );
+    }
   }
 }
 
