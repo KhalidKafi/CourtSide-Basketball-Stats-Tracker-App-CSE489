@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/screens/admin_coach_detail_screen.dart';
+import '../../features/admin/screens/admin_coaches_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
@@ -189,6 +191,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.adminHome,
         builder: (_, __) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/admin/coaches',
+        builder: (_, __) => const AdminCoachesScreen(),
+      ),
+      GoRoute(
+        path: '/admin/coaches/:coachId',
+        builder: (_, state) {
+          final coachId = int.parse(state.pathParameters['coachId']!);
+          return AdminCoachDetailScreen(coachId: coachId);
+        },
       ),
       GoRoute(
         path: AppRoutes.superAdminHome,

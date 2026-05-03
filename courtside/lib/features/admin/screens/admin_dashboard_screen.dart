@@ -29,7 +29,7 @@ class AdminDashboardScreen extends ConsumerWidget {
             icon: const Icon(Icons.logout),
             tooltip: 'Sign out',
             onPressed: () =>
-                ref.read(authNotifierProvider.notifier).signOut(),
+                ref.read(authNotifierProvider.notifier).logout(),
           ),
         ],
       ),
@@ -41,11 +41,11 @@ class AdminDashboardScreen extends ConsumerWidget {
             children: [
               _GreetingCard(name: user.name, email: user.email),
               const SizedBox(height: 20),
-              _SectionTitle('System Overview'),
+              const _SectionTitle('System Overview'),
               const SizedBox(height: 12),
               _CountsGrid(countsAsync: countsAsync),
               const SizedBox(height: 24),
-              _SectionTitle('Coaches'),
+              const _SectionTitle('Coaches'),
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: () => context.go(AppRoutes.adminCoaches),

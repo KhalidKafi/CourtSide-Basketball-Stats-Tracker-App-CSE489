@@ -169,6 +169,10 @@ class AuthRepository {
 
   // ─── Admin management (Super Admin — Phase 2) ──────────────────────────
 
+  Future<User?> findUserRowById(int id) {
+    return _db.findUserById(id);
+  }
+
   Future<List<AppUser>> listAllAdmins() async {
     final rows = await _db.allAdmins();
     return rows.map(_toAppUser).toList();
