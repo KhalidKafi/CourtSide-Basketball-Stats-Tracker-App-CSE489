@@ -334,21 +334,43 @@ Future<String?> _showPasswordPrompt(
   BuildContext context, {
   required String title,
 }) async {
-  final ctrl = TextEditingController();
-  final result = await showDialog<String>(
+  return showDialog<String>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(title),
+    builder: (ctx) => _PasswordPromptDialog(title: title),
+  );
+}
+
+class _PasswordPromptDialog extends StatefulWidget {
+  const _PasswordPromptDialog({required this.title});
+  final String title;
+
+  @override
+  State<_PasswordPromptDialog> createState() => _PasswordPromptDialogState();
+}
+
+class _PasswordPromptDialogState extends State<_PasswordPromptDialog> {
+  final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
-            controller: ctrl,
+            controller: _ctrl,
             decoration: InputDecoration(
               labelText: 'New password',
               suffixIcon: TextButton(
                 onPressed: () {
-                  ctrl.text = PasswordGenerator.generate();
+                  _ctrl.text = PasswordGenerator.generate();
                 },
                 child: const Text('Generate'),
               ),
@@ -358,28 +380,25 @@ Future<String?> _showPasswordPrompt(
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(ctx),
+          onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
         FilledButton(
           onPressed: () {
-            final v = ctrl.text;
+            final v = _ctrl.text;
             if (v.length < 6) {
-              ScaffoldMessenger.of(ctx).showSnackBar(
-                const SnackBar(
-                    content: Text('At least 6 characters.')),
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('At least 6 characters.')),
               );
               return;
             }
-            Navigator.pop(ctx, v);
+            Navigator.pop(context, v);
           },
           child: const Text('Reset'),
         ),
       ],
-    ),
-  );
-  ctrl.dispose();
-  return result;
+    );
+  }
 }
 
 class _EmptyState extends StatelessWidget {
