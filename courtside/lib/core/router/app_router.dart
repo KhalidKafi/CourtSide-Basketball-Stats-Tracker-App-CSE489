@@ -52,6 +52,13 @@ class AppRoutes {
   // Admin routes
   static const adminCoaches = '/admin/coaches';
   static String adminCoachDetail(int coachId) => '/admin/coaches/$coachId';
+
+  // Super Admin routes
+  static const superAdminAdmins = '/super-admin/admins';
+  static const superAdminCoaches = '/super-admin/coaches';
+  static const superAdminFlags = '/super-admin/flags';
+  static String superAdminCoachDetail(int coachId) =>
+      '/super-admin/coaches/$coachId';
 }
 
 // ──────────────────────────────────────────────────────────────────────────
