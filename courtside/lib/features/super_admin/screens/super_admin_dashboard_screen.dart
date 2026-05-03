@@ -65,17 +65,16 @@ class _GreetingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       color: Colors.deepPurple.shade100,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 24,
               backgroundColor: Colors.deepPurple,
-              child: const Icon(Icons.shield, color: Colors.white),
+              child: Icon(Icons.shield, color: Colors.white),
             ),
             const SizedBox(width: 12),
             Expanded(
