@@ -18,7 +18,10 @@ import '../../features/coach/screens/game_list_screen.dart';
 import '../../features/coach/screens/new_game_screen.dart';
 import '../../features/coach/screens/live_game_screen.dart';
 import '../../features/coach/screens/team_list_screen.dart';
+import '../../features/super_admin/screens/super_admin_admins_screen.dart';
+import '../../features/super_admin/screens/super_admin_coaches_screen.dart';
 import '../../features/super_admin/screens/super_admin_dashboard_screen.dart';
+import '../../features/super_admin/screens/super_admin_flags_screen.dart';
 import '../utils/user_role.dart';
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -213,6 +216,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.superAdminHome,
         builder: (_, __) => const SuperAdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/super-admin/admins',
+        builder: (_, __) => const SuperAdminAdminsScreen(),
+      ),
+      GoRoute(
+        path: '/super-admin/coaches',
+        builder: (_, __) => const SuperAdminCoachesScreen(),
+      ),
+      GoRoute(
+        path: '/super-admin/flags',
+        builder: (_, __) => const SuperAdminFlagsScreen(),
       ),
     ],
   );
