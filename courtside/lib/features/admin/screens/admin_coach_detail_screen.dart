@@ -250,58 +250,87 @@ class _DisableCoachCard extends ConsumerWidget {
   }
 }
 
-// Reusable: prompts for a flag reason. Returns null if cancelled.
 Future<String?> _askFlagReason(
   BuildContext context, {
   required String title,
   required String description,
 }) async {
-  final ctrl = TextEditingController();
-  final reason = await showDialog<String>(
+  return showDialog<String>(
     context: context,
-    builder: (ctx) {
-      return AlertDialog(
-        title: Text(title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(description, style: Theme.of(ctx).textTheme.bodySmall),
-            const SizedBox(height: 12),
-            TextField(
-              controller: ctrl,
-              decoration: const InputDecoration(
-                labelText: 'Reason',
-                hintText: 'Briefly explain the issue',
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+    builder: (ctx) => _FlagReasonDialog(
+      title: title,
+      description: description,
+    ),
+  );
+}
+
+class _FlagReasonDialog extends StatefulWidget {
+  const _FlagReasonDialog({
+    required this.title,
+    required this.description,
+  });
+
+  final String title;
+  final String description;
+
+  @override
+  State<_FlagReasonDialog> createState() => _FlagReasonDialogState();
+}
+
+class _FlagReasonDialogState extends State<_FlagReasonDialog> {
+  final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            widget.description,
+            style: Theme.of(context).textTheme.bodySmall,
           ),
-          FilledButton(
-            onPressed: () {
-              final text = ctrl.text.trim();
-              if (text.length < 5) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text('Please write a reason (at least 5 characters).'),
-                  ),
-                );
-                return;
-              }
-              Navigator.pop(ctx, text);
-            },
-            child: const Text('Submit Flag'),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _ctrl,
+            decoration: const InputDecoration(
+              labelText: 'Reason',
+              hintText: 'Briefly explain the issue',
+            ),
+            maxLines: 3,
           ),
         ],
-      );
-    },
-  );
-  ctrl.dispose();
-  return reason;
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final text = _ctrl.text.trim();
+            if (text.length < 5) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Please write a reason (at least 5 characters).',
+                  ),
+                ),
+              );
+              return;
+            }
+            Navigator.pop(context, text);
+          },
+          child: const Text('Submit Flag'),
+        ),
+      ],
+    );
+  }
 }
