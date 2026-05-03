@@ -193,9 +193,9 @@ class PdfHelpers {
 
   /// Standard page format we use everywhere — A4, sensible margins.
   static pw.PageTheme defaultPageTheme() {
-    return pw.PageTheme(
+    return const pw.PageTheme(
       pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(32),
+      margin: pw.EdgeInsets.all(32),
     );
   }
 

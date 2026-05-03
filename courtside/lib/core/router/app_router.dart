@@ -46,6 +46,10 @@ class AppRoutes {
       '/coach/teams/$teamId/analytics';
   static String playerProfile(int teamId, int playerId) =>
       '/coach/teams/$teamId/players/$playerId';
+
+  // Admin routes
+  static const adminCoaches = '/admin/coaches';
+  static String adminCoachDetail(int coachId) => '/admin/coaches/$coachId';
 }
 
 // ──────────────────────────────────────────────────────────────────────────

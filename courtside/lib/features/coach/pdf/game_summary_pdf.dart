@@ -102,7 +102,7 @@ class GameSummaryPdf {
               pw.SizedBox(width: 16),
               pw.Text(
                 '-',
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   color: PdfColors.white,
                   fontSize: 30,
                 ),
@@ -121,7 +121,7 @@ class GameSummaryPdf {
           pw.SizedBox(height: 4),
           pw.Text(
             'vs ${game.opponent}',
-            style: pw.TextStyle(
+            style: const pw.TextStyle(
               color: PdfColors.white,
               fontSize: 11,
             ),
