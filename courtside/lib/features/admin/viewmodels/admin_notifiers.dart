@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../models/app_user.dart';
 import '../../../repositories/providers.dart';
+import '../../auth/viewmodels/auth_notifier.dart';
 
 // ─── Streaming reads ────────────────────────────────────────────────────
 
@@ -17,6 +18,13 @@ final systemCountsProvider = StreamProvider<SystemCounts>((ref) {
 final coachByIdProvider =
     FutureProvider.family<AppUser?, int>((ref, id) {
   return ref.watch(adminRepositoryProvider).findCoachById(id);
+});
+
+final coachUserRowProvider =
+    StreamProvider.family<User?, int>((ref, coachId) {
+  final db = ref.watch(appDatabaseProvider);
+  return (db.select(db.users)..where((u) => u.id.equals(coachId)))
+      .watchSingleOrNull();
 });
 
 // ─── Actions ────────────────────────────────────────────────────────────

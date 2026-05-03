@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/database/app_database.dart';
 import '../../../core/router/app_router.dart';
 import '../../auth/viewmodels/auth_notifier.dart';
 import '../../coach/viewmodels/team_notifiers.dart';
@@ -199,23 +198,33 @@ class _DisableCoachCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<User?>(
-      future: ref.read(coachByIdProvider(coachId).future).then((_) async {
-        // Direct DB read for the isDisabled flag — coachByIdProvider
-        // returns AppUser which doesn't include isDisabled.
-        return await ref
-            .read(authRepositoryProvider)
-            .findUserRowById(coachId);
-      }),
-      builder: (context, snap) {
-        final disabled = snap.data?.isDisabled ?? false;
-        final colorScheme = Theme.of(context).colorScheme;
+    final userAsync = ref.watch(coachUserRowProvider(coachId));
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return userAsync.when(
+      loading: () => const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (e, _) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text('Error: $e'),
+        ),
+      ),
+      data: (user) {
+        if (user == null) {
+          return const SizedBox.shrink();
+        }
+        final disabled = user.isDisabled;
         return Card(
           color: disabled
               ? colorScheme.errorContainer
               : colorScheme.surfaceContainerHighest,
           child: SwitchListTile(
-            value: disabled,
+            value: !disabled,
             title: Text(
               disabled ? 'Account disabled' : 'Account active',
               style: const TextStyle(fontWeight: FontWeight.w600),
@@ -227,21 +236,22 @@ class _DisableCoachCard extends ConsumerWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             onChanged: (newValue) async {
+              final shouldDisable = !newValue;
               final ok = await ref
                   .read(adminActionsProvider.notifier)
-                  .setCoachDisabled(coachId, newValue);
+                  .setCoachDisabled(coachId, shouldDisable);
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(ok
-                      ? (newValue
-                          ? 'Coach disabled.'
-                          : 'Coach re-enabled.')
-                      : 'Could not update coach.'),
+                  content: Text(
+                    ok
+                        ? (shouldDisable
+                            ? 'Coach disabled.'
+                            : 'Coach re-enabled.')
+                        : 'Could not update coach.',
+                  ),
                 ),
               );
-              // Trigger rebuild
-              (context as Element).markNeedsBuild();
             },
           ),
         );
