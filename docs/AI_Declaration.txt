@@ -1,0 +1,62 @@
+============================================================
+           AI USAGE DECLARATION
+============================================================
+
+Name: Khalid Al Kafi
+Student ID: 22101152
+Assignment: CSE489 Project - CourtSide Basketball Stats Tracker App
+Date: May 4, 2026
+
+------------------------------------------------------------
+1. AI TOOLS USED (check all that apply)
+------------------------------------------------------------
+[ ] None
+[ ] ChatGPT
+[ ] GitHub Copilot
+[ ] Google Gemini
+[x] Claude
+[ ] Cursor
+[ ] Other: ________________
+
+------------------------------------------------------------
+2. PURPOSE OF AI USE (check all that apply)
+------------------------------------------------------------
+[x] Learning/understanding concepts
+[x] Debugging my code
+[x] Generating code snippets
+[ ] Writing text content
+[x] Design/styling ideas
+[ ] Image generation
+[ ] Other: ________________
+
+------------------------------------------------------------
+3. DESCRIPTION OF AI USE
+------------------------------------------------------------
+Used Claude (claude.ai / Claude Code) to assist with Flutter
+development throughout the project. AI helped generate
+boilerplate for screens and providers, debug layout issues
+(e.g. BoxConstraints errors in the super admin dashboard),
+and refine UI styling to match Material 3 guidelines.
+
+------------------------------------------------------------
+4. AI-ASSISTED SECTIONS
+------------------------------------------------------------
+List specific files/sections where AI helped significantly:
+
+File: lib/features/super_admin/screens/  Section: Dashboard layout & Quick Actions fix
+File: lib/core/router/app_router.dart    Section: Route definitions and redirect logic
+File: lib/core/theme/app_theme.dart      Section: Material 3 theme configuration
+
+------------------------------------------------------------
+5. DECLARATION
+------------------------------------------------------------
+I declare that:
+- This disclosure is complete and accurate
+- I understand all code in my submission
+- I can explain and modify my work if asked
+- I take full responsibility for my submission
+
+Signature: Khalid Al Kafi
+Date: May 4, 2026
+
+============================================================
