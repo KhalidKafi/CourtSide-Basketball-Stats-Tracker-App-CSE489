@@ -24,6 +24,24 @@ Admin accounts are created by the Super Admin through the app.
 - **Sharing:** share_plus + screenshot for image-based social sharing
 - **Auth:** SHA-256 + per-user 16-byte random salt with constant-time verify
 
+## Project structure
+
+```
+lib/
+├── core/
+│   ├── database/      # drift schema + DAO + seeder
+│   ├── router/        # go_router config + role-based redirect
+│   ├── theme/
+│   └── utils/         # password hashing, stats math, PDF helpers
+├── models/            # plain Dart domain models (decoupled from drift rows)
+├── repositories/      # data access layer
+└── features/
+    ├── auth/          # login, register, splash
+    ├── coach/         # full coach workflow (largest feature)
+    ├── admin/         # admin oversight
+    └── super_admin/   # admin management + flag queue
+```
+
 ## Roles & permissions
 
 - **Coach** — Self-registers via signup. Full CRUD on their own teams, players, and games. Live stat tracking. Analytics and exports. Each coach only sees their own data.
