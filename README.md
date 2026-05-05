@@ -117,4 +117,4 @@ Stats rows are pre-initialized at game creation time so live game logging is alw
 
 ## Course
 
-CSE489 Mobile App Development, Spring 2026, BRAC University
+CSE489 Android App Development, Spring 2026, BRAC University
